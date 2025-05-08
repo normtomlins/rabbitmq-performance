@@ -1,125 +1,107 @@
-# RabbitMQ Performance: Python vs Go
+# RabbitMQ Performance Benchmark: Python vs Go
 
-A comprehensive benchmark comparing RabbitMQ message throughput between Python and Go implementations.
+A comprehensive benchmark comparing RabbitMQ message throughput between Python and Go implementations, revealing dramatic performance differences and optimization insights.
 
-## Overview
+## 🚀 Quick Results
 
-This project demonstrates the performance differences between Python and Go when publishing messages to RabbitMQ. Through various optimizations and concurrency models, we discovered dramatic performance differences between the two languages.
+- **Python's Best**: 72,204 messages/second (multiprocessing)
+- **Go's Peak**: 1,082,014 messages/second (15x faster!)
+- **Go's Sustained**: 266,025 messages/second
+- **Key Finding**: Python's GIL severely limits threading performance
 
-### Key Findings
+## 📊 Blog Posts
 
-- **Python's best**: 72,204 messages/second (multiprocessing)
-- **Go's peak**: 1,082,014 messages/second (ultra-optimized)
-- **Go's sustained**: 266,025 messages/second
-- Python's GIL severely limits threading performance
-- Go's goroutines provide true concurrency
+- [**Main Analysis**](docs/blog_post.html) - Comprehensive overview with charts and findings
+- [**Technical Deep Dive**](docs/blog_technical_appendix.html) - Code analysis and optimization details
 
-## Project Structure
+## 🏃‍♂️ Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/rabbitmq-performance.git
+cd rabbitmq-performance
+
+# Start RabbitMQ
+docker compose up -d
+
+# Run Python benchmarks
+./run_python_benchmarks.sh
+
+# Run Go benchmarks
+./run_go_benchmarks.sh
+```
+
+## 📁 Project Structure
 
 ```
 .
-├── python/                 # Python implementations
-│   ├── producer.py        # Basic producer
-│   ├── consumer.py        # Basic consumer
-│   ├── producer_*.py      # Various optimizations
-│   └── requirements.txt
-├── go-producer/           # Go implementations
-│   ├── main.go           # Standard tests
-│   ├── ultra_fast.go     # Optimized version
-│   ├── go.mod
-│   └── go.sum
-├── docker-compose*.yml    # Docker configurations
-├── blog_post.html        # Main blog post
-├── blog_technical_appendix.html  # Technical details
-└── README.md
+├── python/              # Python implementations
+│   ├── producer.py     # Basic producer
+│   ├── consumer.py     # Basic consumer
+│   └── ...            # Various optimizations
+├── go/                # Go implementations
+│   ├── main.go        # Standard benchmarks
+│   ├── ultra_fast.go  # Optimized version
+│   └── ...
+├── docker/            # Docker configurations
+├── docs/              # Documentation & blog posts
+├── scripts/           # Helper scripts
+└── index.html         # Project landing page
 ```
 
-## Quick Start
+## 🔍 Key Findings
 
-### Prerequisites
+1. **Python's GIL is a major bottleneck** - Multi-threading actually decreased performance
+2. **Multiprocessing saves Python** - Achieved 72K msgs/sec by bypassing the GIL
+3. **Go's concurrency shines** - Goroutines enable true parallelism
+4. **More threads ≠ better performance** - Optimization matters more than thread count
+5. **Small changes, big impact** - Removing console output improved performance 20x
 
-- Docker and Docker Compose
-- Python 3.9+ (optional, for local development)
-- Go 1.21+ (optional, for local development)
+## 📈 Performance Comparison
 
-### Running the Benchmarks
+### Python Results
 
-1. Clone the repository:
+| Implementation | Messages/Second | Notes |
+|---------------|-----------------|-------|
+| Single Thread (Optimized) | ~22,000 | Non-persistent messages |
+| Multi-threading (8 threads) | ~5,900 | **Worse** than single thread! |
+| Multiprocessing (4 processes) | **72,204** | Best Python performance |
 
-   ```bash
-   git clone https://github.com/normtomlins/rabbitmq-performance.git
-   cd rabbitmq-performance
-   ```
+### Go Results
 
-2. Start RabbitMQ:
+| Implementation | Messages/Second | Notes |
+|---------------|-----------------|-------|
+| Single Goroutine | 220,773 | 3x faster than best Python |
+| Ultra-optimized (peak) | **1,082,014** | 15x faster than Python |
+| Ultra-optimized (sustained) | 266,025 | Average over 500K messages |
 
-   ```bash
-   docker compose up -d rabbitmq
-   ```
+## 🛠 Technologies Used
 
-3. Run Python benchmarks:
+- Python 3.9 with `pika` library
+- Go 1.21 with `amqp091-go` library  
+- RabbitMQ 3.x
+- Docker & Docker Compose
+- macOS with Apple Silicon (M1)
 
-   ```bash
-   ./run_go_fixed.sh all
-   ```
+## 🤝 Contributing
 
-4. Run Go benchmarks:
-   ```bash
-   ./run_go_fixed.sh all
-   ```
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Performance Results
+Run the benchmarks on your hardware and share your results!
 
-### Python Performance
+## 📄 License
 
-| Implementation                | Messages/Second | Notes                     |
-| ----------------------------- | --------------- | ------------------------- |
-| Single Thread (Persistent)    | ~1,400          | With publisher confirms   |
-| Single Thread (Optimized)     | ~22,000         | Non-persistent            |
-| Multi-threading (8 threads)   | ~5,900          | Worse than single thread! |
-| Multiprocessing (4 processes) | **72,204**      | Best Python performance   |
+MIT License - see [LICENSE](LICENSE) file for details.
 
-### Go Performance
-
-| Implementation              | Messages/Second | Notes                      |
-| --------------------------- | --------------- | -------------------------- |
-| Single Goroutine            | 220,773         | 3x faster than best Python |
-| Worker Pool (10 workers)    | 81,210          | Connection contention      |
-| Ultra-optimized (peak)      | **1,082,014**   | 15x faster than Python     |
-| Ultra-optimized (sustained) | 266,025         | Average over 500K messages |
-
-## Key Optimizations
-
-### Python Optimizations
-
-- Remove console output (+20x performance)
-- Use multiprocessing instead of threading
-- Non-persistent messages
-- Connection per process
-
-### Go Optimizations
-
-- Connection pooling
-- Pre-allocation of objects
-- Simplified message structure
-- Optimal worker count (2x CPU cores)
-- Non-persistent messages
-
-## Blog Posts
-
-- [Main Blog Post](blog_post.html) - Comprehensive overview of findings
-- [Technical Appendix](blog_technical_appendix.html) - Detailed code analysis
-
-## Contributing
-
-Feel free to run these benchmarks on your own hardware and share your results!
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Acknowledgments
+## 🙏 Acknowledgments
 
 - RabbitMQ team for excellent documentation
 - Python `pika` library maintainers
 - Go `amqp091-go` library maintainers
+- The developer community for feedback and suggestions
+
+---
+
+**Questions?** Open an issue or reach out!
+
+**Found this useful?** Give it a ⭐️!
