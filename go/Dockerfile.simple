@@ -1,0 +1,18 @@
+# Simple Dockerfile that initializes the module
+FROM golang:1.21-alpine
+
+WORKDIR /app
+
+# Install git
+RUN apk add --no-cache git
+
+# Copy all files
+COPY . .
+
+# Initialize module and download dependencies
+RUN go mod init rabbitmq-go-producer || true
+RUN go get github.com/streadway/amqp
+RUN go mod tidy
+
+# Default command
+CMD ["go", "run", "main.go"]

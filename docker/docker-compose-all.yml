@@ -1,0 +1,74 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_container
+    ports:
+      - "5673:5672"    # AMQP port
+      - "15673:15672"  # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - rabbitmq_network
+
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: producer_container
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python producer_docker.py
+    networks:
+      - rabbitmq_network
+    profiles:
+      - producer
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: consumer_container
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python consumer_docker.py
+    networks:
+      - rabbitmq_network
+    profiles:
+      - consumer
+
+  test-connection:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: test_container
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python test_connection_docker.py
+    networks:
+      - rabbitmq_network
+    profiles:
+      - test
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  rabbitmq_network:
+    driver: bridge

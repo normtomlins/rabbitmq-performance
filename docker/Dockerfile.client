@@ -1,0 +1,15 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy all Python scripts
+COPY *.py ./
+
+# Make scripts executable
+RUN chmod +x *.py
+
+# Default to running the consumer, but this can be overridden
+CMD ["python", "consumer.py"]

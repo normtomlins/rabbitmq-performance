@@ -1,0 +1,56 @@
+name: RabbitMQ Benchmark Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Start RabbitMQ
+      run: docker compose up -d
+    
+    - name: Wait for RabbitMQ
+      run: sleep 15
+    
+    - name: Run Python Tests
+      run: |
+        docker compose -f docker/docker-compose-all.yml build
+        docker compose -f docker/docker-compose-all.yml run --rm test-connection
+    
+    - name: Stop containers
+      if: always()
+      run: docker compose down
+
+  test-go:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Start RabbitMQ
+      run: docker compose up -d
+    
+    - name: Wait for RabbitMQ
+      run: sleep 15
+    
+    - name: Run Go Tests
+      run: |
+        docker compose -f docker/docker-compose-go-simple.yml build
+        docker compose -f docker/docker-compose-go-simple.yml run --rm go-producer go run main.go
+    
+    - name: Stop containers
+      if: always()
+      run: docker compose down
